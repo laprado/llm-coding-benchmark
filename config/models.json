@@ -100,20 +100,6 @@
       "selection_reason": "Added as a local Ollama GPT OSS baseline for later warmup and benchmark testing."
     },
     {
-      "slug": "nemotron_cascade_2",
-      "id": "ollama/nemotron_cascade_2",
-      "label": "Nemotron Cascade 2",
-      "provider": "ollama",
-      "skip_by_default": true,
-      "ollama_model_name": "nemotron-cascade-2:latest",
-      "llama_swap_model": "nemotron-cascade-2:latest",
-      "ollama_limit_context": 262144,
-      "ollama_limit_output": 32768,
-      "ollama_tool_call": true,
-      "ollama_reasoning": true,
-      "selection_reason": "Added as a local Ollama Nemotron Cascade 2 candidate for later warmup and benchmark testing. This entry uses explicit local model metadata because it is not yet mapped in the home opencode config."
-    },
-    {
       "slug": "claude_opus_4_6",
       "id": "openrouter/anthropic/claude-opus-4.6",
       "label": "Claude Opus 4.6",
@@ -564,6 +550,42 @@
       "label": "Gemma 4 31B (Ollama Cloud)",
       "provider": "ollama-cloud",
       "selection_reason": "Google Gemma 4 31B IT BF16 served via Ollama's hosted cloud (https://ollama.com). Bypasses the local llama.cpp parser bugs that caused infinite repetition loops on local Q3/Q8 GGUFs. Tests whether Gemma 4 is actually capable for agentic tool calling when served by Google's full-precision infrastructure rather than crippled by quantization + parser regressions. Requires OLLAMA_API_KEY env var with an Ollama Cloud subscription."
+    },
+    {
+      "slug": "qwen3_5_27b_mlx_local",
+      "id": "ollama/qwen3.5:27b-mlx",
+      "label": "Qwen 3.5 27B (MLX, local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). MLX build of Qwen 3.5 27B installed on the local server. MoE (~3B active) — lightest/fastest of the local set, run first. Qwen 3.5 needs tool calling to work for the build agent."
+    },
+    {
+      "slug": "gemma4_26b_mlx_local",
+      "id": "ollama/gemma4:26b-mlx",
+      "label": "Gemma 4 26B (MLX, local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). MLX build of Gemma 4 26B installed on the local server."
+    },
+    {
+      "slug": "gemma4_26b_local",
+      "id": "ollama/gemma4:26b",
+      "label": "Gemma 4 26B (local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). Non-MLX Gemma 4 26B installed on the local server. Comparison point against the MLX build to measure the MLX runtime delta."
+    },
+    {
+      "slug": "gemma4_latest_local",
+      "id": "ollama/gemma4:latest",
+      "label": "Gemma 4 (latest, local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). The gemma4:latest tag installed on the local server."
     }
   ]
 }

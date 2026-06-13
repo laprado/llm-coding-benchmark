@@ -74,8 +74,17 @@ def build_opencode_command(
     model_id: str,
     prompt: str,
     continue_session_id: str | None = None,
+    project_dir: Path | None = None,
 ) -> list[str]:
     command = [runner["command"], *runner["args"]]
+    # Pin opencode's working directory explicitly. Relying on the subprocess
+    # cwd alone is not enough: opencode resolves the project root by walking up
+    # to the nearest .git, so with project_dir nested in the harness repo the
+    # build agent's bash tool runs `rails new` at the repo root and leaks the
+    # generated app into the harness. --dir anchors opencode at the project dir
+    # regardless of cwd or git layout (verified: bash pwd reports the --dir).
+    if project_dir is not None:
+        command.extend(["--dir", str(project_dir.resolve())])
     if continue_session_id:
         command.extend(["--session", continue_session_id])
     else:
@@ -649,7 +658,10 @@ def run_opencode_phase(
 ) -> dict[str, Any]:
     prompt_path.write_text(prompt)
     _verify_opencode_config(bench.opencode_config_path, model, model_slug, project_dir)
-    command = build_opencode_command(bench.runner, model["id"], prompt, continue_session_id=continue_session_id)
+    command = build_opencode_command(
+        bench.runner, model["id"], prompt,
+        continue_session_id=continue_session_id, project_dir=project_dir,
+    )
     wall_start = time.monotonic()
     process_env = os.environ.copy()
     if bench.opencode_config_path is not None:
