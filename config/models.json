@@ -552,11 +552,42 @@
       "selection_reason": "Google Gemma 4 31B IT BF16 served via Ollama's hosted cloud (https://ollama.com). Bypasses the local llama.cpp parser bugs that caused infinite repetition loops on local Q3/Q8 GGUFs. Tests whether Gemma 4 is actually capable for agentic tool calling when served by Google's full-precision infrastructure rather than crippled by quantization + parser regressions. Requires OLLAMA_API_KEY env var with an Ollama Cloud subscription."
     },
     {
+      "slug": "gemma4_12b_mlx_bf16_local",
+      "id": "ollama/gemma4:12b-mlx-bf16",
+      "label": "Gemma 4 12B (MLX BF16, local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "enable_followup": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). Smaller Gemma 4 (12B) but FULL-PRECISION BF16 in MLX (~24GB). Tests whether the earlier Gemma degeneracy (types_v2..v18 loop on nvfp4/Q4) was a quantization artifact rather than the model. Run with drop_thinking=false + output 16384."
+    },
+    {
+      "slug": "qwen3_6_27b_mlx_local",
+      "id": "ollama/qwen3.6:27b-mlx",
+      "label": "Qwen 3.6 27B (MLX, local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "enable_followup": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). MLX build of Qwen 3.6 27B. Smaller sibling of the 35B (which reasoned too heavily and stalled). Run with drop_thinking=false + output 16384 (lessons from the 35B). Tests whether the smaller 3.6 sustains the agentic loop better."
+    },
+    {
+      "slug": "qwen3_6_35b_mlx_local",
+      "id": "ollama/qwen3.6:35b-mlx",
+      "label": "Qwen 3.6 35B (MLX, local)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "enable_followup": true,
+      "benchmark_context_override": 32768,
+      "selection_reason": "Local Ollama profile (host 192.168.15.201). MLX build of Qwen 3.6 35B-A3B (MoE). Successor to qwen3.5:27b-mlx, which was the only local model to sustain the agentic loop on the Go brief (Tier 2). Tests whether 3.6 improves on it. enable_followup for the phase-2 chat proof via the Ollama fallback."
+    },
+    {
       "slug": "qwen3_5_27b_mlx_local",
       "id": "ollama/qwen3.5:27b-mlx",
       "label": "Qwen 3.5 27B (MLX, local)",
       "provider": "ollama",
       "skip_by_default": true,
+      "enable_followup": true,
       "benchmark_context_override": 32768,
       "selection_reason": "Local Ollama profile (host 192.168.15.201). MLX build of Qwen 3.5 27B installed on the local server. MoE (~3B active) — lightest/fastest of the local set, run first. Qwen 3.5 needs tool calling to work for the build agent."
     },
@@ -566,6 +597,7 @@
       "label": "Gemma 4 26B (MLX, local)",
       "provider": "ollama",
       "skip_by_default": true,
+      "enable_followup": true,
       "benchmark_context_override": 32768,
       "selection_reason": "Local Ollama profile (host 192.168.15.201). MLX build of Gemma 4 26B installed on the local server."
     },
