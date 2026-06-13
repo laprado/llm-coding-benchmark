@@ -9,6 +9,7 @@ from pathlib import Path
 
 from benchmark.backends import LocalModelBackend, OllamaBackend, create_backend
 from benchmark.config import (
+    RAILS_PROFILE,
     BenchmarkConfig,
     load_ollama_warmup_payload,
     load_opencode_ollama_api_base,
@@ -20,6 +21,13 @@ from benchmark.runner import run_model
 from benchmark.util import load_json, print_line
 
 DEFAULT_NO_PROGRESS_MINUTES = 6
+
+# Defaults for the Rails brief. When --brief is absent and the matching CLI flag is
+# not passed, resolution falls back to these (preserving today's exact behavior).
+DEFAULT_PROMPT_PATH = "prompts/benchmark_prompt.txt"
+DEFAULT_FOLLOWUP_PROMPT_PATH = "prompts/benchmark_followup_prompt.txt"
+DEFAULT_RESULTS_DIR = "results"
+DEFAULT_REPORT_PATH = "docs/report.md"
 
 
 def _cleanup_backends(backend: LocalModelBackend | None, local_api_base: str | None) -> None:
@@ -46,14 +54,26 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Benchmark coding models through opencode.")
     parser.add_argument("--config", default="config/models.json")
     parser.add_argument("--opencode-config", default="config/opencode.benchmark.json")
-    parser.add_argument("--prompt", default="prompts/benchmark_prompt.txt")
+    parser.add_argument(
+        "--brief",
+        default=None,
+        help="Path to a brief manifest JSON (name, prompt, followup_prompt, results_dir, "
+        "report, project_profile). Selects a whole alternate brief (e.g. Go) in one flag; "
+        "explicit CLI flags still override individual manifest values.",
+    )
+    parser.add_argument(
+        "--prompt",
+        default=None,
+        help=f"Phase-1 prompt file (default: {DEFAULT_PROMPT_PATH}, or the brief's prompt).",
+    )
     parser.add_argument(
         "--followup-prompt",
-        default="prompts/benchmark_followup_prompt.txt",
-        help="Optional second-phase prompt that continues the same session after the primary prompt completes.",
+        default=None,
+        help="Optional second-phase prompt that continues the same session after the primary prompt completes "
+        f"(default: {DEFAULT_FOLLOWUP_PROMPT_PATH}, or the brief's followup_prompt).",
     )
-    parser.add_argument("--results-dir", default="results")
-    parser.add_argument("--report", default="docs/report.md")
+    parser.add_argument("--results-dir", default=None)
+    parser.add_argument("--report", default=None)
     parser.add_argument("--ollama-warmup-results", default="results/ollama_warmup.json")
     parser.add_argument("--timeout-minutes", type=int, default=90)
     parser.add_argument(
@@ -113,13 +133,31 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+
+    # A brief manifest bundles prompt + followup + results-dir + report + project_profile.
+    # Precedence per field: explicit CLI flag > manifest value (only if --brief) > Rails default.
+    manifest: dict = {}
+    if args.brief is not None:
+        manifest = load_json(Path(args.brief))
+
+    def _resolve(cli_value, manifest_key, hardcoded_default):
+        if cli_value is not None:
+            return cli_value
+        if args.brief is not None and manifest.get(manifest_key) is not None:
+            return manifest[manifest_key]
+        return hardcoded_default
+
     config_path = Path(args.config)
     opencode_config_path = Path(args.opencode_config)
-    prompt_path = Path(args.prompt)
-    followup_prompt_path = Path(args.followup_prompt)
-    results_dir = Path(args.results_dir)
-    report_path = Path(args.report)
+    prompt_path = Path(_resolve(args.prompt, "prompt", DEFAULT_PROMPT_PATH))
+    followup_prompt_path = Path(_resolve(args.followup_prompt, "followup_prompt", DEFAULT_FOLLOWUP_PROMPT_PATH))
+    results_dir = Path(_resolve(args.results_dir, "results_dir", DEFAULT_RESULTS_DIR))
+    report_path = Path(_resolve(args.report, "report", DEFAULT_REPORT_PATH))
     warmup_path = Path(args.ollama_warmup_results)
+
+    project_profile = manifest.get("project_profile") if args.brief is not None else None
+    if project_profile is None:
+        project_profile = RAILS_PROFILE
 
     config = load_json(config_path)
     prompt = prompt_path.read_text().strip()
@@ -193,6 +231,7 @@ def main() -> int:
             selected_models=selected_models,
             prompt=prompt,
             followup_prompt=followup_prompt,
+            project_profile=project_profile,
         )
 
         total_models = len(selected_models)

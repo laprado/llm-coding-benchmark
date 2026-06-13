@@ -39,6 +39,41 @@ OPENCODE_YOLO_PERMISSION = {
 
 TERMINAL_STATUSES = {"completed", "completed_with_errors", "failed", "timeout"}
 
+# Project-presence profile driving summarize_project()'s works_as_intended scoring.
+# RAILS_PROFILE captures the original hardcoded Rails checks verbatim so the default
+# (no --brief) path stays byte-for-byte identical. A brief manifest can supply an
+# alternative profile (e.g. Go) via the same schema.
+RAILS_PROFILE: dict[str, Any] = {
+    "label": "Rails",
+    "checks": {
+        "gemfile": "Gemfile",
+        "routes": "config/routes.rb",
+        "app_dir": "app",
+        "views_dir": "app/views",
+        "javascript_dir": "app/javascript",
+        "tests_dir": "test",
+        "readme_md": "README.md",
+        "readme_lower": "readme.md",
+        "dockerfile": "Dockerfile",
+        "docker_compose_yml": "docker-compose.yml",
+        "docker_compose_yaml": "docker-compose.yaml",
+        "compose_yml": "compose.yml",
+        "compose_yaml": "compose.yaml",
+    },
+    "core_checks": ["gemfile", "routes", "app_dir"],
+    "tests_mode": "dir",
+    "tests_dir_check": "tests_dir",
+    "readme_checks": ["readme_md", "readme_lower"],
+    "compose_checks": ["docker_compose_yml", "docker_compose_yaml", "compose_yml", "compose_yaml"],
+    "docker_check": "dockerfile",
+    "notes": {
+        "yes": "Rails app, tests, README, and container files detected.",
+        "empty": "Project directory is empty.",
+        "partial": "Some expected benchmark artifacts exist, but the scaffold looks incomplete.",
+        "no": "Generated files do not resemble the requested Rails project.",
+    },
+}
+
 
 @dataclass
 class BenchmarkConfig:
@@ -58,6 +93,7 @@ class BenchmarkConfig:
     selected_models: list[dict[str, Any]] = field(default_factory=list)
     prompt: str = ""
     followup_prompt: str | None = None
+    project_profile: dict[str, Any] = field(default_factory=lambda: RAILS_PROFILE)
 
 
 def load_opencode_config() -> dict[str, Any] | None:
@@ -195,45 +231,38 @@ def load_ollama_warmup_payload(path: Path) -> dict[str, Any] | None:
     return payload
 
 
-def summarize_project(project_dir: Path) -> dict[str, Any]:
-    checks = {
-        "gemfile": project_dir / "Gemfile",
-        "routes": project_dir / "config" / "routes.rb",
-        "app_dir": project_dir / "app",
-        "views_dir": project_dir / "app" / "views",
-        "javascript_dir": project_dir / "app" / "javascript",
-        "tests_dir": project_dir / "test",
-        "readme_md": project_dir / "README.md",
-        "readme_lower": project_dir / "readme.md",
-        "dockerfile": project_dir / "Dockerfile",
-        "docker_compose_yml": project_dir / "docker-compose.yml",
-        "docker_compose_yaml": project_dir / "docker-compose.yaml",
-        "compose_yml": project_dir / "compose.yml",
-        "compose_yaml": project_dir / "compose.yaml",
-    }
+def summarize_project(project_dir: Path, profile: dict[str, Any] = RAILS_PROFILE) -> dict[str, Any]:
+    checks = {name: project_dir / rel for name, rel in profile["checks"].items()}
     present = {name: path.exists() for name, path in checks.items()}
     files = sum(1 for item in project_dir.rglob("*") if item.is_file())
-    readme_present = present["readme_md"] or present["readme_lower"]
-    compose_present = any(
-        present[name]
-        for name in ("docker_compose_yml", "docker_compose_yaml", "compose_yml", "compose_yaml")
-    )
-    rails_present = present["gemfile"] and present["routes"] and present["app_dir"]
-    tests_present = present["tests_dir"]
-    docker_present = present["dockerfile"] and compose_present
 
-    if rails_present and readme_present and tests_present and docker_present:
+    readme_present = any(present[name] for name in profile["readme_checks"])
+    compose_present = any(present[name] for name in profile["compose_checks"])
+    # core_checks are exact relative paths; core_globs match anywhere via rglob
+    # (e.g. Go's idiomatic cmd/<svc>/main.go, not a root main.go).
+    core_present = all(present[name] for name in profile["core_checks"]) and all(
+        any(project_dir.rglob(pattern)) for pattern in profile.get("core_globs", [])
+    )
+    docker_present = present[profile["docker_check"]] and compose_present
+
+    if profile["tests_mode"] == "glob":
+        tests_present = any(project_dir.rglob(profile["tests_glob"]))
+    else:
+        tests_present = present[profile["tests_dir_check"]]
+
+    notes = profile["notes"]
+    if core_present and readme_present and tests_present and docker_present:
         intended = "yes"
-        note = "Rails app, tests, README, and container files detected."
+        note = notes["yes"]
     elif files == 0:
         intended = "no"
-        note = "Project directory is empty."
-    elif rails_present or readme_present or docker_present or tests_present:
+        note = notes["empty"]
+    elif core_present or readme_present or docker_present or tests_present:
         intended = "partial"
-        note = "Some expected benchmark artifacts exist, but the scaffold looks incomplete."
+        note = notes["partial"]
     else:
         intended = "no"
-        note = "Generated files do not resemble the requested Rails project."
+        note = notes["no"]
 
     return {
         "file_count": files,

@@ -18,6 +18,16 @@ results/*/session-export.stderr.log
 results/*/prompt.txt
 results/*/followup-prompt.txt
 results/ollama_warmup.json
+results-go/*/project/
+results-go/*/opencode-output.ndjson
+results-go/*/opencode-stderr.log
+results-go/*/followup-opencode-output.ndjson
+results-go/*/followup-opencode-stderr.log
+results-go/*/session-export.json
+results-go/*/session-export.stderr.log
+results-go/*/prompt.txt
+results-go/*/followup-prompt.txt
+results-go/ollama_warmup.json
 results-claude-code/*/project/
 results-claude-code/*/stream.ndjson
 results-claude-code/*/stderr.log

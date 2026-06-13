@@ -696,7 +696,7 @@ def run_opencode_phase(
     wall_end = time.monotonic()
     events = parse_event_stream(result.stdout)
     metrics = extract_metrics(events)
-    project_summary = summarize_project(project_dir)
+    project_summary = summarize_project(project_dir, bench.project_profile)
     elapsed_seconds = round(wall_end - wall_start, 2)
     total_tokens = metrics["tokens"].get("total")
     terminal_stop_completed = metrics["finish_reason"] == "stop"
@@ -825,7 +825,7 @@ def run_codex_phase(
     wall_end = time.monotonic()
     events = parse_event_stream(result.stdout)
     metrics = extract_codex_metrics(events)
-    project_summary = summarize_project(project_dir)
+    project_summary = summarize_project(project_dir, bench.project_profile)
     elapsed_seconds = round(wall_end - wall_start, 2)
     total_tokens = metrics["tokens"].get("total")
     terminal_stop_completed = metrics["finish_reason"] == "stop"
@@ -1068,7 +1068,7 @@ def run_model(model: dict[str, Any], bench: BenchmarkConfig, index: int, total: 
                     "stderr": str(stderr_path),
                     "stdout": str(stdout_path),
                 },
-                "project_summary": summarize_project(project_dir),
+                "project_summary": summarize_project(project_dir, bench.project_profile),
                 "prompt_sha256": prompt_sha256(bench.prompt),
                 "started_at": started_at,
                 "status": "failed",

@@ -1,0 +1,33 @@
+{
+  "name": "go-web-app",
+  "prompt": "prompts/benchmark_prompt.go.txt",
+  "followup_prompt": "prompts/benchmark_followup_prompt.go.txt",
+  "results_dir": "results-go",
+  "report": "docs/report.go.md",
+  "project_profile": {
+    "label": "Go",
+    "checks": {
+      "go_mod": "go.mod",
+      "readme_md": "README.md",
+      "readme_lower": "readme.md",
+      "dockerfile": "Dockerfile",
+      "docker_compose_yml": "docker-compose.yml",
+      "docker_compose_yaml": "docker-compose.yaml",
+      "compose_yml": "compose.yml",
+      "compose_yaml": "compose.yaml"
+    },
+    "core_checks": ["go_mod"],
+    "core_globs": ["main.go"],
+    "tests_mode": "glob",
+    "tests_glob": "*_test.go",
+    "readme_checks": ["readme_md", "readme_lower"],
+    "compose_checks": ["docker_compose_yml", "docker_compose_yaml", "compose_yml", "compose_yaml"],
+    "docker_check": "dockerfile",
+    "notes": {
+      "yes": "Go module, tests, README, and container files detected.",
+      "empty": "Project directory is empty.",
+      "partial": "Some expected benchmark artifacts exist, but the scaffold looks incomplete.",
+      "no": "Generated files do not resemble the requested Go project."
+    }
+  }
+}
