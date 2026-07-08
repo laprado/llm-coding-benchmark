@@ -1,12 +1,12 @@
 # Benchmark Report
 
-Generated at: 2026-07-08T18:42:50+00:00
+Generated at: 2026-07-08T18:55:31+00:00
 Prompt SHA256: `aaf88038673017b0444904a9e107acfe2f938a3416eb670b1751231ab96cd905`
 
 ## Progress
 
 - `completed`: 0
-- `completed_with_errors`: 0
+- `completed_with_errors`: 1
 - `failed`: 2
 - `timeout`: 0
 - `not_run`: 9
@@ -31,6 +31,7 @@ Prompt SHA256: `aaf88038673017b0444904a9e107acfe2f938a3416eb670b1751231ab96cd905
 - `mac_local_forced_gemma_qwen` -> `ollama/google/gemma4-26b-a4b-it-mlx`: Local-only forced delegation: Gemma 4 26B MLX (planner) + Qwen 3.5 35B Coding MLX (coder), both via llama-swap on Mac Studio. Cross-architecture test: Gemma 4 plans, Qwen coding variant executes. [Mac Studio M4 Max 36GB profile]
 - `mac_local_forced_gemma_gemma` -> `ollama/google/gemma4-26b-a4b-it-mlx`: Local-only forced delegation smoke test: Gemma 4 26B MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the same-model setup can sustain the planner-orchestrator loop (tool calling reliability, context handling) without cloud dependencies. [Mac Studio M4 Max 36GB profile]
 - `mac_local_forced_qwen_qwen_same` -> `ollama/qwen/qwen3.6-35b-a3b-gguf`: Local-only forced delegation: Qwen 3.6 35B GGUF as both planner and coder, same model via llama-swap on Mac Studio. No model switching cost. Tests whether Qwen 3.6 sustains the planner-orchestrator loop better than Gemma 4 26B (which stalled). [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_qwen35_qwen35_same` -> `ollama/qwen/qwen3.5-35b-a3b-coding-mlx`: Local-only forced delegation: Qwen 3.5 35B Coding MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the coding-optimized variant sustains the planner-orchestrator loop better than Qwen 3.6 GGUF or Gemma 4 26B MLX (both stalled). [Mac Studio M4 Max 36GB profile]
 - `mac_local_forced_qwen_ornith` -> `ollama/qwen/qwen3.6-35b-a3b-gguf`: Local-only forced delegation: Qwen 3.6 35B GGUF (planner) + Ornith 9B BF16 (coder), both via llama-swap on Mac Studio. Tests whether the SWE-Bench specialized small model (Ornith) executes better than a larger general model when guided by a planner. [Mac Studio M4 Max 36GB profile]
 
 ## Results
@@ -47,6 +48,7 @@ Prompt SHA256: `aaf88038673017b0444904a9e107acfe2f938a3416eb670b1751231ab96cd905
 | Mac local Gemma 4 26B -> Qwen 3.5 Coding (FORCED delegation) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
 | Mac local Gemma 4 26B -> Gemma 4 26B (FORCED delegation, same-model smoke) | ollama | - | failed | 1927.83 | 30012 | 15.57 | yes | 17 | Exit code -15. Go module, tests, README, and container files detected. |
 | Mac local Qwen 3.6 -> Qwen 3.6 (FORCED delegation, same-model) | ollama | - | failed | 1242.98 | 20030 | 16.11 | partial | 4 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
+| Mac local Qwen 3.5 Coding -> Qwen 3.5 Coding (FORCED delegation, same-model) | ollama | - | completed_with_errors | 268.84 | 18915 | 70.36 | no | 2 | Generated files do not resemble the requested Go project. |
 | Mac local Qwen 3.6 -> Ornith 9B (FORCED delegation) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
 
 ## Per-Run Paths
