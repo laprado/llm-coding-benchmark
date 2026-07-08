@@ -1,0 +1,32 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "models": {
+        "google/gemma4-26b-a4b-it-gguf": {
+          "id": "clm-gemma-4-26B-A4B-it",
+          "name": "Gemma 4 26B GGUF"
+        },
+        "google/gemma4-26b-a4b-it-mlx": {
+          "id": "mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+          "name": "Gemma 4 26B MLX"
+        },
+        "google/gemma4-26b-a4b-it-ollama": {
+          "id": "olm-gemma4:26b-mlx",
+          "name": "Gemma 4 26B Ollama MLX"
+        },
+        "qwen/qwen3.5-35b-a3b-coding-mlx": {
+          "id": "olm-qwen3.5:35b-a3b-coding-nvfp4",
+          "name": "Qwen 3.5 35B A3B Coding MLX"
+        },
+        "qwen/qwen3.6-35b-a3b-gguf": {
+          "id": "clm-qwen3.6-35b-a3b",
+          "name": "Qwen 3.6 35B A3B GGUF"
+        }
+      },
+      "options": {
+        "baseURL": "http://192.168.15.201:8080/v1"
+      }
+    }
+  }
+}
