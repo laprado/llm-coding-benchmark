@@ -168,6 +168,26 @@
       "selection_reason": "Local-only forced delegation: Qwen 3.6 35B GGUF as both planner and coder, same model via llama-swap on Mac Studio. No model switching cost. Tests whether Qwen 3.6 sustains the planner-orchestrator loop better than Gemma 4 26B (which stalled). [Mac Studio M4 Max 36GB profile]"
     },
     {
+      "slug": "mac_local_forced_qwen35_qwen35_same",
+      "id": "ollama/qwen/qwen3.5-35b-a3b-coding-mlx",
+      "label": "Mac local Qwen 3.5 Coding -> Qwen 3.5 Coding (FORCED delegation, same-model)",
+      "provider": "ollama",
+      "llama_swap_model": "olm-qwen3.5:35b-a3b-coding-nvfp4",
+      "ollama_model_name": "qwen3.5:35b-a3b-coding-mlx",
+      "ollama_display_name": "Qwen 3.5 35B A3B Coding MLX",
+      "benchmark_context_override": 131072,
+      "skip_by_default": true,
+      "opencode_subagent": {
+        "name": "coder",
+        "model_id": "ollama/qwen/qwen3.5-35b-a3b-coding-mlx",
+        "provider": "ollama",
+        "llama_swap_model": "olm-qwen3.5:35b-a3b-coding-nvfp4",
+        "description": "Use for all concrete coding execution dispatched by the planner-orchestrator. Same model as planner — Qwen 3.5 35B Coding MLX via llama-swap.",
+        "prompt": "You are a local coding agent running on llama-swap (Mac MLX). Execute the dispatched subtask exactly as specified. Follow instructions literally. Keep changes minimal."
+      },
+      "selection_reason": "Local-only forced delegation: Qwen 3.5 35B Coding MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the coding-optimized variant sustains the planner-orchestrator loop better than Qwen 3.6 GGUF or Gemma 4 26B MLX (both stalled). [Mac Studio M4 Max 36GB profile]"
+    },
+    {
       "slug": "mac_local_forced_qwen_ornith",
       "id": "ollama/qwen/qwen3.6-35b-a3b-gguf",
       "label": "Mac local Qwen 3.6 -> Ornith 9B (FORCED delegation)",
