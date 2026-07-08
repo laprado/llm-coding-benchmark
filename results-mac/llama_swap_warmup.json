@@ -1,0 +1,52 @@
+{
+  "api_base": "http://192.168.15.201:8080",
+  "config_file": "config/models.mac.json",
+  "generated_at": "2026-06-22T16:44:09+00:00",
+  "results": [
+    {
+      "context_override": 131072,
+      "elapsed_seconds": 7.3,
+      "llama_swap_model": "mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+      "message": "preload ok",
+      "preflight_tps": null,
+      "slug": "gemma4_26b_mlx",
+      "status": "ok"
+    },
+    {
+      "context_override": 131072,
+      "elapsed_seconds": 5.11,
+      "llama_swap_model": "olm-gemma4:26b-mlx",
+      "message": "preload ok",
+      "preflight_tps": null,
+      "slug": "gemma4_26b_ollama",
+      "status": "ok"
+    },
+    {
+      "context_override": 131072,
+      "elapsed_seconds": 15.77,
+      "llama_swap_model": "clm-gemma-4-26B-A4B-it",
+      "message": "preload ok (56.9 tok/s)",
+      "preflight_tps": 56.9,
+      "slug": "gemma4_26b_gguf",
+      "status": "ok"
+    },
+    {
+      "context_override": 131072,
+      "elapsed_seconds": 16.65,
+      "llama_swap_model": "clm-qwen3.6-35b-a3b",
+      "message": "preload ok (69.2 tok/s)",
+      "preflight_tps": 69.2,
+      "slug": "qwen3_6_35b_a3b_gguf",
+      "status": "ok"
+    },
+    {
+      "context_override": 131072,
+      "elapsed_seconds": 7.79,
+      "llama_swap_model": "olm-qwen3.5:35b-a3b-coding-nvfp4",
+      "message": "preload ok",
+      "preflight_tps": null,
+      "slug": "qwen3_5_35b_a3b_coding_mlx",
+      "status": "ok"
+    }
+  ]
+}
