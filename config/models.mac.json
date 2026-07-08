@@ -128,6 +128,26 @@
       "selection_reason": "Local-only forced delegation: Gemma 4 26B MLX (planner) + Qwen 3.5 35B Coding MLX (coder), both via llama-swap on Mac Studio. Cross-architecture test: Gemma 4 plans, Qwen coding variant executes. [Mac Studio M4 Max 36GB profile]"
     },
     {
+      "slug": "mac_local_forced_gemma_gemma",
+      "id": "ollama/google/gemma4-26b-a4b-it-mlx",
+      "label": "Mac local Gemma 4 26B -> Gemma 4 26B (FORCED delegation, same-model smoke)",
+      "provider": "ollama",
+      "llama_swap_model": "mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+      "ollama_model_name": "gemma4:26b-mlx",
+      "ollama_display_name": "Gemma 4 26B MLX",
+      "benchmark_context_override": 131072,
+      "skip_by_default": true,
+      "opencode_subagent": {
+        "name": "coder",
+        "model_id": "ollama/google/gemma4-26b-a4b-it-mlx",
+        "provider": "ollama",
+        "llama_swap_model": "mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+        "description": "Use for all concrete coding execution dispatched by the planner-orchestrator. Same model as planner — Gemma 4 26B MLX via llama-swap.",
+        "prompt": "You are a local coding agent running on llama-swap (Mac MLX). Execute the dispatched subtask exactly as specified. Follow instructions literally. Keep changes minimal."
+      },
+      "selection_reason": "Local-only forced delegation smoke test: Gemma 4 26B MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the same-model setup can sustain the planner-orchestrator loop (tool calling reliability, context handling) without cloud dependencies. [Mac Studio M4 Max 36GB profile]"
+    },
+    {
       "slug": "mac_local_forced_qwen_ornith",
       "id": "ollama/qwen/qwen3.6-35b-a3b-gguf",
       "label": "Mac local Qwen 3.6 -> Ornith 9B (FORCED delegation)",
