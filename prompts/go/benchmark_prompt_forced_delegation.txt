@@ -44,7 +44,7 @@ Do not fix issues yourself. Every correction goes through the coder.
 
 ### 4. VALIDATE PHASE
 Once the implementation is in place, delegate end-to-end validation to the coder. The validation plan should cover (dispatch each as a subtask or group related items):
-- Run `templ generate` and build Tailwind CSS
+- Run `templ generate`
 - Run `go build ./...` and confirm the binary compiles
 - Run the test suite and confirm `go test -cover` passes cleanly
 - Boot the Go app locally and confirm it responds (curl the chat endpoint)
@@ -63,7 +63,8 @@ Stack constraints:
 - Go standard library `net/http` for the server
 - `templ` for HTML components (run `templ generate` to produce Go code from `.templ` files)
 - Hotwire-style interactivity via htmx
-- Tailwind CSS
+- Tailwind CSS via CDN (do NOT use npm, Tailwind CLI, or node_modules — just a `<script>` tag in the layout)
+- Do NOT install npm, Node.js, or any JavaScript tooling — no package.json, no node_modules
 - Avoid duplications and single-file dumps. Componentize via templ components and normal Go project best practices (handlers, a small service layer, a templates/components package).
 
 LLM integration:
@@ -83,7 +84,7 @@ Quality requirements:
 Deliverables:
 - Go app in the current workspace root (do not create a nested subdirectory; stay in place)
 - README.md explaining what the app does, how to set up the environment (OpenRouter and Ollama-fallback variables), and how to run locally
-- Dockerfile (multi-stage: install templ and Tailwind CLI, run `templ generate` and build Tailwind CSS, then `go build` a static binary)
+- Dockerfile (install templ via go install, then `templ generate`, then `go build` a static binary — no Node.js, no npm, no Tailwind CLI)
 - docker-compose.yml (or compose.yaml) that runs the app with the correct env vars
 - No authentication — this is a simple chat webpage
 

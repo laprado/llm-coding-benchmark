@@ -7,7 +7,7 @@ This is phase 2 of 2 and a continuation of the existing project in the current w
 Use environment variables so the chat actually works. Source ~/.config/zsh/secrets only to load the required environment. Do not print secret values, do not copy secret file contents into the repo, and do not commit secrets into files, logs, Dockerfiles, compose files, or README examples.
 
 Validate the project end-to-end in this order:
-- run `templ generate` and build the Tailwind CSS, then `go build ./...` so the binary compiles
+- run `templ generate`, then `go build ./...` so the binary compiles
 - run the local app in a way that proves it boots (start the server, confirm it listens)
 - with OPENROUTER_API_KEY empty, confirm the app falls back to the local Ollama server and that a real chat request returns a non-empty model reply: send a message to the chat endpoint (for example with curl) and verify the response contains actual model output. This proves the chat works end-to-end against the local Ollama fallback.
 - make sure `docker build` finishes successfully

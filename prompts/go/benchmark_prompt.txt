@@ -2,7 +2,7 @@ I want you to build a Go web application. Use the newest Go available in mise he
 
 Use only the tools available in this runtime. Do not call apply_patch. For file changes, use edit for existing files and write for new files. If a tool call fails, recover and continue implementing instead of stopping.
 
-Initialize a proper Go module (go mod init) and build a very simple SPA mimicking a minimal ChatGPT-like web interface. Use the Go standard library net/http for the server, templ for HTML components (run `templ generate` to produce the Go code from your .templ files), Hotwire-style interactivity via htmx, and Tailwind for CSS. Avoid duplications, avoid putting everything in a single main.go or a single template, and properly componentize with templ components and normal Go project best practices (handlers, a small service layer, a templates/components package).
+Initialize a proper Go module (go mod init) and build a very simple SPA mimicking a minimal ChatGPT-like web interface. Use the Go standard library net/http for the server, templ for HTML components (run `templ generate` to produce the Go code from your .templ files), Hotwire-style interactivity via htmx, and Tailwind for CSS via CDN (a `<script>` tag in the layout — do NOT use npm, Tailwind CLI, or node_modules). Avoid duplications, avoid putting everything in a single main.go or a single template, and properly componentize with templ components and normal Go project best practices (handlers, a small service layer, a templates/components package). Do NOT install npm, Node.js, or any JavaScript tooling.
 
 You must use environment variables so the chat actually works. Implement the LLM integration behind a single Go interface with one OpenAI-compatible client, and select the backend from the environment:
 - If OPENROUTER_API_KEY is set and non-empty, talk to OpenRouter at https://openrouter.ai/api/v1 using that key and a configurable chat model (default to the latest Claude Sonnet model id).
@@ -13,7 +13,7 @@ Add proper Go tests (table-driven, standard `testing` package) for each componen
 
 Use gofmt, go vet, golangci-lint (or staticcheck), and gosec for CI and make sure the code is clean, well formatted, and well tested, following proper Go coding best practices.
 
-This app will not have authentication. It is really a simple webpage for chatting with an LLM. Document the project in a README.md explaining what it does, how to set up the environment (including the OpenRouter and Ollama-fallback variables), and how to run locally. Also create a Dockerfile (multi-stage: install templ and the Tailwind CLI, run `templ generate` and build the Tailwind CSS, then `go build` a static binary) and a docker compose configuration to run it locally.
+This app will not have authentication. It is really a simple webpage for chatting with an LLM. Document the project in a README.md explaining what it does, how to set up the environment (including the OpenRouter and Ollama-fallback variables), and how to run locally. Also create a Dockerfile (multi-stage: install templ via go install, run `templ generate`, then `go build` a static binary — no Node.js, no npm, no Tailwind CLI) and a docker compose configuration to run it locally.
 
 This is phase 1 of 2. Focus on implementation, tests, and project structure. Do not spend time on full runtime validation beyond what is needed to keep implementation moving.
 
