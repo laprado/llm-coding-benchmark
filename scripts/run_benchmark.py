@@ -24,8 +24,8 @@ DEFAULT_NO_PROGRESS_MINUTES = 6
 
 # Defaults for the Rails brief. When --brief is absent and the matching CLI flag is
 # not passed, resolution falls back to these (preserving today's exact behavior).
-DEFAULT_PROMPT_PATH = "prompts/benchmark_prompt.txt"
-DEFAULT_FOLLOWUP_PROMPT_PATH = "prompts/benchmark_followup_prompt.txt"
+DEFAULT_PROMPT_PATH = "prompts/ruby/benchmark_prompt.txt"
+DEFAULT_FOLLOWUP_PROMPT_PATH = "prompts/ruby/benchmark_followup_prompt.txt"
 DEFAULT_RESULTS_DIR = "results"
 DEFAULT_REPORT_PATH = "docs/report.md"
 

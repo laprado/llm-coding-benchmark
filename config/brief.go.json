@@ -1,7 +1,7 @@
 {
   "name": "go-web-app",
-  "prompt": "prompts/benchmark_prompt.go.txt",
-  "followup_prompt": "prompts/benchmark_followup_prompt.go.txt",
+  "prompt": "prompts/go/benchmark_prompt.txt",
+  "followup_prompt": "prompts/go/benchmark_followup_prompt.txt",
   "results_dir": "results-go",
   "report": "docs/report.go.md",
   "project_profile": {
