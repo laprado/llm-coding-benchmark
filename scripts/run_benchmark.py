@@ -17,6 +17,7 @@ from benchmark.config import (
     write_local_opencode_config,
 )
 from benchmark.report import build_report, load_results
+from benchmark.decomposer import run_subtask_mode
 from benchmark.runner import run_model
 from benchmark.util import load_json, print_line
 
@@ -128,6 +129,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="API base URL for the local backend. Defaults to the Ollama URL from the opencode config.",
     )
+    parser.add_argument(
+        "--subtask-mode",
+        action="store_true",
+        help="Break the prompt into sub-tasks and execute them sequentially. "
+        "Each sub-task runs as a fresh opencode session with a focused prompt, "
+        "avoiding multi-turn context accumulation that causes local models to stall.",
+    )
     return parser.parse_args()
 
 
@@ -227,6 +235,7 @@ def main() -> int:
             min_preview_samples=args.min_preview_samples,
             auto_skip_slow_preview=args.auto_skip_slow_preview,
             force=args.force,
+            subtask_mode=args.subtask_mode,
             backend=backend,
             selected_models=selected_models,
             prompt=prompt,
@@ -240,7 +249,10 @@ def main() -> int:
             f"no_progress_timeout={bench.no_progress_timeout_seconds}s force={bench.force}"
         )
         for index, model in enumerate(selected_models, start=1):
-            run_model(model, bench, index, total_models)
+            if bench.subtask_mode:
+                run_subtask_mode(model, bench, index, total_models)
+            else:
+                run_model(model, bench, index, total_models)
 
         # Unload models from both backends to free GPU after the run
         _cleanup_backends(backend, args.local_api_base)

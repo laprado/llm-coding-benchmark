@@ -1,0 +1,38 @@
+Read the benchmark prompt at {benchmark_prompt_path} and decompose the implementation brief into a series of self-contained sub-tasks.
+
+Each sub-task must meet ALL of these criteria:
+- Small enough that a fresh agent can complete it without context from previous sub-tasks
+- Self-contained with explicit acceptance criteria
+- Lists every file path it will create or modify
+- Lists its dependencies (sub-task IDs that must complete first)
+- Focused on ONE deliverable (scaffolding, model layer, handler, test, Docker, README, etc.)
+- Any interface or contract it depends on must be described inline
+
+Output ONLY one file: write the decomposition as JSON to {project_dir}/subtasks.json.
+
+The JSON must be an array of objects with this exact structure:
+[
+  {{
+    "id": "S1",
+    "description": "Project scaffolding: go mod init, mise.toml, directory layout",
+    "files": ["go.mod", "mise.toml"],
+    "dependencies": [],
+    "acceptance_criteria": "go mod init succeeds"
+  }},
+  {{
+    "id": "S2",
+    "description": "LLM client interface and OpenAI-compatible implementation",
+    "files": ["internal/llm/interface.go", "internal/llm/openrouter.go", "internal/llm/ollama.go"],
+    "dependencies": ["S1"],
+    "acceptance_criteria": "go build ./internal/llm/... compiles"
+  }}
+]
+
+Rules:
+- Do NOT implement any sub-task yourself. Only produce the decomposition.
+- Do NOT describe the plan in conversation messages. Only write subtasks.json.
+- Do NOT ask questions. Analyze the prompt file and decompose it.
+- If the benchmark prompt mentions Docker, README, or tests, each gets its own sub-task.
+- Target 5-8 sub-tasks. Not fewer than 4, not more than 12.
+- The first sub-task should create the basic project structure.
+- The last sub-task should always be validation (templ generate, go build, go test, docker build).

@@ -76,6 +76,19 @@
       "selection_reason": "Qwen 3.5 35B MOE (3B active params) coding variant via llama-swap with MLX backend on Apple Silicon. NVFP4 quantized. Fits comfortably in 36 GB unified memory. Direct comparison with qwen3_5_35b (llama.cpp, AMD) and qwen3_6_35b — tests MLX inference quality vs llama.cpp at same model scale. [Mac Studio M4 Max 36GB profile]"
     },
     {
+      "slug": "qwen3_6_27b_mlx",
+      "id": "ollama/qwen/qwen3.6-27b-mlx",
+      "label": "Qwen 3.6 27B Dense MLX",
+      "provider": "ollama",
+      "llama_swap_model": "olm-qwen3.6-27b-mlx",
+      "ollama_model_name": "qwen3.6:27b-mlx",
+      "ollama_display_name": "Qwen 3.6 27B Dense MLX",
+      "benchmark_context_override": 65536,
+      "ollama_limit_output": 32000,
+      "enable_followup": true,
+      "selection_reason": "Qwen 3.6 27B Dense model via llama-swap with Ollama/MLX backend on Apple Silicon. Smaller than the 35B A3B MOE variant — uses dense architecture which may produce more reliable tool calling and fewer repetition loops. Fits comfortably in 36 GB unified memory even at higher precision. Tests whether a smaller dense model outperforms larger MOE models on the benchmark. [Mac Studio M4 Max 36GB profile]"
+    },
+    {
       "slug": "ornith_9b_bf16",
       "id": "ollama/ornith:9b-bf16",
       "label": "Ornith 1.0 9B BF16",
@@ -186,6 +199,27 @@
         "prompt": "You are a local coding agent running on llama-swap (Mac MLX). Execute the dispatched subtask exactly as specified. Follow instructions literally. Keep changes minimal."
       },
       "selection_reason": "Local-only forced delegation: Qwen 3.5 35B Coding MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the coding-optimized variant sustains the planner-orchestrator loop better than Qwen 3.6 GGUF or Gemma 4 26B MLX (both stalled). [Mac Studio M4 Max 36GB profile]"
+    },
+    {
+      "slug": "mac_local_forced_qwen27_qwen27_same",
+      "id": "ollama/qwen/qwen3.6-27b-mlx",
+      "label": "Mac local Qwen 3.6 27B -> Qwen 3.6 27B (FORCED delegation, same-model, dense)",
+      "provider": "ollama",
+      "llama_swap_model": "olm-qwen3.6-27b-mlx",
+      "ollama_model_name": "qwen3.6:27b-mlx",
+      "ollama_display_name": "Qwen 3.6 27B Dense MLX",
+      "benchmark_context_override": 65536,
+      "ollama_limit_output": 32000,
+      "skip_by_default": true,
+      "opencode_subagent": {
+        "name": "coder",
+        "model_id": "ollama/qwen/qwen3.6-27b-mlx",
+        "provider": "ollama",
+        "llama_swap_model": "olm-qwen3.6-27b-mlx",
+        "description": "Use for all concrete coding execution dispatched by the planner-orchestrator. Same model as planner — Qwen 3.6 27B Dense MLX via llama-swap.",
+        "prompt": "You are a local coding agent running on llama-swap (Mac MLX). Execute the dispatched subtask exactly as specified. Follow instructions literally. Keep changes minimal."
+      },
+      "selection_reason": "Local-only forced delegation: Qwen 3.6 27B Dense MLX as both planner and coder, same dense model via llama-swap on Mac Studio. First test of a dense (non-MOE) architecture in the planner-orchestrator loop. 27B active params vs ~3-4B on MOE variants — hypothesize better tool calling reliability and fewer repetition loops. 64k context due to dense model overhead in 36GB unified memory. [Mac Studio M4 Max 36GB profile]"
     },
     {
       "slug": "mac_local_forced_qwen_ornith",
