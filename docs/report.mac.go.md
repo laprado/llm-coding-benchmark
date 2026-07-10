@@ -1,15 +1,15 @@
 # Benchmark Report
 
-Generated at: 2026-07-07T14:41:09+00:00
-Prompt SHA256: `cf89c4d279a14df863d0183846a461b2a36679cf55c4c2e0864e9e5d40b66176`
+Generated at: 2026-07-10T18:33:15+00:00
+Prompt SHA256: `ce0bff42ccf9d4fbde43a283c978d96f20a2079ee6040e2b44fad163fa6d767b`
 
 ## Progress
 
-- `completed`: 0
-- `completed_with_errors`: 4
+- `completed`: 1
+- `completed_with_errors`: 2
 - `failed`: 2
 - `timeout`: 0
-- `not_run`: 0
+- `not_run`: 9
 
 ## Runner
 
@@ -26,18 +26,34 @@ Prompt SHA256: `cf89c4d279a14df863d0183846a461b2a36679cf55c4c2e0864e9e5d40b66176
 - `gemma4_26b_gguf` -> `ollama/google/gemma4-26b-a4b-it-gguf`: Gemma 4 26B MOE (4B active params) via llama-swap with llama.cpp GGUF backend on Apple Silicon. -hf flag triggers HuggingFace download on first load. Third backend variant for the same model: head-to-head-to-head with gemma4_26b_mlx (MLX-lm) and gemma4_26b_ollama (Ollama/MLX) to compare tool calling reliability and code quality across MLX-lm, Ollama, and llama.cpp serving stacks. [Mac Studio M4 Max 36GB profile]
 - `qwen3_6_35b_a3b_gguf` -> `ollama/qwen/qwen3.6-35b-a3b-gguf`: Qwen 3.6 35B MOE (3B active params) via llama-swap with llama.cpp GGUF backend on Apple Silicon. -hf flag triggers HuggingFace download on first load. Direct comparison with qwen3_5_35b_a3b_coding_mlx (MLX NVFP4) and the AMD/NVIDIA qwen3_6_35b profile — tests whether the GGUF/llama.cpp path produces equivalent or better code quality than the MLX path on Apple Silicon. [Mac Studio M4 Max 36GB profile]
 - `qwen3_5_35b_a3b_coding_mlx` -> `ollama/qwen/qwen3.5-35b-a3b-coding-mlx`: Qwen 3.5 35B MOE (3B active params) coding variant via llama-swap with MLX backend on Apple Silicon. NVFP4 quantized. Fits comfortably in 36 GB unified memory. Direct comparison with qwen3_5_35b (llama.cpp, AMD) and qwen3_6_35b — tests MLX inference quality vs llama.cpp at same model scale. [Mac Studio M4 Max 36GB profile]
+- `qwen3_6_27b_mlx` -> `ollama/qwen/qwen3.6-27b-mlx`: Qwen 3.6 27B Dense model via llama-swap with Ollama/MLX backend on Apple Silicon. Smaller than the 35B A3B MOE variant — uses dense architecture which may produce more reliable tool calling and fewer repetition loops. Fits comfortably in 36 GB unified memory even at higher precision. Tests whether a smaller dense model outperforms larger MOE models on the benchmark. [Mac Studio M4 Max 36GB profile]
 - `ornith_9b_bf16` -> `ollama/ornith:9b-bf16`: Ornith 1.0 9B BF16 via llama-swap with Ollama backend on Apple Silicon. Specialized agentic coding model that achieves 69.4% on SWE-Bench Verified despite 9B params. BF16 quantization (~17GB) fits in 36GB unified memory. Tests whether a small specialized model beats larger general models (Qwen 3.5/3.6, Gemma 4) on the benchmark. [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_qwen_qwen` -> `ollama/qwen/qwen3.6-35b-a3b-gguf`: Local-only forced delegation: Qwen 3.6 35B GGUF (planner) + Qwen 3.5 35B Coding MLX (coder), both via llama-swap on Mac Studio. Tests whether a local model pair can execute the planner-orchestrator pattern end-to-end without cloud dependencies. [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_gemma_qwen` -> `ollama/google/gemma4-26b-a4b-it-mlx`: Local-only forced delegation: Gemma 4 26B MLX (planner) + Qwen 3.5 35B Coding MLX (coder), both via llama-swap on Mac Studio. Cross-architecture test: Gemma 4 plans, Qwen coding variant executes. [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_gemma_gemma` -> `ollama/google/gemma4-26b-a4b-it-mlx`: Local-only forced delegation smoke test: Gemma 4 26B MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the same-model setup can sustain the planner-orchestrator loop (tool calling reliability, context handling) without cloud dependencies. [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_qwen_qwen_same` -> `ollama/qwen/qwen3.6-35b-a3b-gguf`: Local-only forced delegation: Qwen 3.6 35B GGUF as both planner and coder, same model via llama-swap on Mac Studio. No model switching cost. Tests whether Qwen 3.6 sustains the planner-orchestrator loop better than Gemma 4 26B (which stalled). [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_qwen35_qwen35_same` -> `ollama/qwen/qwen3.5-35b-a3b-coding-mlx`: Local-only forced delegation: Qwen 3.5 35B Coding MLX as both planner and coder, same model via llama-swap on Mac Studio. Tests whether the coding-optimized variant sustains the planner-orchestrator loop better than Qwen 3.6 GGUF or Gemma 4 26B MLX (both stalled). [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_qwen27_qwen27_same` -> `ollama/qwen/qwen3.6-27b-mlx`: Local-only forced delegation: Qwen 3.6 27B Dense MLX as both planner and coder, same dense model via llama-swap on Mac Studio. First test of a dense (non-MOE) architecture in the planner-orchestrator loop. 27B active params vs ~3-4B on MOE variants — hypothesize better tool calling reliability and fewer repetition loops. 64k context due to dense model overhead in 36GB unified memory. [Mac Studio M4 Max 36GB profile]
+- `mac_local_forced_qwen_ornith` -> `ollama/qwen/qwen3.6-35b-a3b-gguf`: Local-only forced delegation: Qwen 3.6 35B GGUF (planner) + Ornith 9B BF16 (coder), both via llama-swap on Mac Studio. Tests whether the SWE-Bench specialized small model (Ornith) executes better than a larger general model when guided by a planner. [Mac Studio M4 Max 36GB profile]
 
 ## Results
 
 | Model | Provider | Warmup ctx | Status | Elapsed (s) | Total tokens | Tok/s | Works? | Files | Notes |
 | --- | --- | ---: | --- | ---: | ---: | ---: | --- | ---: | --- |
-| Gemma 4 26B MLX | ollama | - | failed | 318.77 | 25962 | 81.44 | partial | 20614 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
-| Gemma 4 26B Ollama MLX | ollama | - | completed_with_errors | 566.57 | 33554 | 552.69 | partial | 1116 | Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
-| Gemma 4 26B GGUF | ollama | - | failed | 1653.63 | 32768 | 29.19 | partial | 1307 | Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
-| Qwen 3.6 35B A3B GGUF | ollama | - | completed_with_errors | 1325.88 | 5971 | 10.64 | partial | 1465 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
-| Qwen 3.5 35B A3B Coding MLX | ollama | - | completed_with_errors | 712.53 | 25762 | 138.89 | partial | 1126 | Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
-| Ornith 1.0 9B BF16 | ollama | - | completed_with_errors | 1308.81 | 26747 | 96.24 | no | 5 | Generated files do not resemble the requested Rails project. |
+| Gemma 4 26B MLX | ollama | - | failed | 591.37 | 24002 | 40.59 | partial | 11 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
+| Gemma 4 26B Ollama MLX | ollama | - | failed | 119.39 | 18403 | 154.14 | no | 5 | Exit code -15. Generated files do not resemble the requested Go project. |
+| Gemma 4 26B GGUF | ollama | - | completed | 2129.25 | 14885 | 17.44 | yes | 26 | Exit code -15. Go module, tests, README, and container files detected. |
+| Qwen 3.6 35B A3B GGUF | ollama | - | completed_with_errors | 1462.87 | 6474 | 10.84 | partial | 603 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
+| Qwen 3.5 35B A3B Coding MLX | ollama | - | completed_with_errors | 1049.50 | 49223 | 55.20 | partial | 9 | Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
+| Qwen 3.6 27B Dense MLX | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Ornith 1.0 9B BF16 | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Qwen 3.6 -> Qwen 3.5 Coding (FORCED delegation) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Gemma 4 26B -> Qwen 3.5 Coding (FORCED delegation) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Gemma 4 26B -> Gemma 4 26B (FORCED delegation, same-model smoke) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Qwen 3.6 -> Qwen 3.6 (FORCED delegation, same-model) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Qwen 3.5 Coding -> Qwen 3.5 Coding (FORCED delegation, same-model) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Qwen 3.6 27B -> Qwen 3.6 27B (FORCED delegation, same-model, dense) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
+| Mac local Qwen 3.6 -> Ornith 9B (FORCED delegation) | ollama | - | not_run | - | - | - | n/a | 0 | Run has not been executed yet. |
 
 ## Per-Run Paths
 
