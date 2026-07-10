@@ -90,6 +90,7 @@ class BenchmarkConfig:
     auto_skip_slow_preview: bool
     force: bool
     subtask_mode: bool = False
+    headroom_enabled: bool = False
     backend: LocalModelBackend | None = None
     selected_models: list[dict[str, Any]] = field(default_factory=list)
     prompt: str = ""

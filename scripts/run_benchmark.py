@@ -16,6 +16,7 @@ from benchmark.config import (
     print_local_opencode_config_summary,
     write_local_opencode_config,
 )
+from benchmark.headroom_integration import HeadroomProxy, check_headroom, override_config_for_headroom
 from benchmark.report import build_report, load_results
 from benchmark.decomposer import run_subtask_mode
 from benchmark.runner import run_model
@@ -136,6 +137,14 @@ def parse_args() -> argparse.Namespace:
         "Each sub-task runs as a fresh opencode session with a focused prompt, "
         "avoiding multi-turn context accumulation that causes local models to stall.",
     )
+    parser.add_argument(
+        "--headroom",
+        action="store_true",
+        help="Route all LLM API calls through the Headroom context-compression proxy. "
+        "Requires headroom CLI (pip install 'headroom-ai[all]'). "
+        "Overrides provider base URLs in the generated opencode config to "
+        "point at the local Headroom proxy for automatic context compression.",
+    )
     return parser.parse_args()
 
 
@@ -236,6 +245,7 @@ def main() -> int:
             auto_skip_slow_preview=args.auto_skip_slow_preview,
             force=args.force,
             subtask_mode=args.subtask_mode,
+            headroom_enabled=args.headroom,
             backend=backend,
             selected_models=selected_models,
             prompt=prompt,
@@ -243,19 +253,41 @@ def main() -> int:
             project_profile=project_profile,
         )
 
+        headroom_proxy: HeadroomProxy | None = None
+        if args.headroom:
+            ok, msg = check_headroom()
+            if not ok:
+                print(f"Headroom error: {msg}", file=sys.stderr)
+                return 1
+            print_line(f"Headroom: {msg}")
+
+            upstream = args.local_api_base or api_base or "http://localhost:11434"
+            headroom_proxy = HeadroomProxy(upstream_url=upstream)
+            headroom_proxy.start()
+            print_line(f"Headroom proxy: {headroom_proxy.proxy_base_url} (upstream={upstream})")
+
+            modified = override_config_for_headroom(
+                opencode_config_path, headroom_proxy.proxy_base_url,
+            )
+            print_line(f"Headroom: overridden {modified} provider baseURL(s) in config")
+
         total_models = len(selected_models)
         print_line(
             f"Benchmark run starting: models={total_models} timeout={bench.timeout_seconds}s "
             f"no_progress_timeout={bench.no_progress_timeout_seconds}s force={bench.force}"
         )
-        for index, model in enumerate(selected_models, start=1):
-            if bench.subtask_mode:
-                run_subtask_mode(model, bench, index, total_models)
-            else:
-                run_model(model, bench, index, total_models)
-
-        # Unload models from both backends to free GPU after the run
-        _cleanup_backends(backend, args.local_api_base)
+        try:
+            for index, model in enumerate(selected_models, start=1):
+                if bench.subtask_mode:
+                    run_subtask_mode(model, bench, index, total_models)
+                else:
+                    run_model(model, bench, index, total_models)
+        finally:
+            # Unload models from both backends to free GPU after the run
+            _cleanup_backends(backend, args.local_api_base)
+            if headroom_proxy is not None:
+                print_line("Headroom: stopping proxy")
+                headroom_proxy.stop()
 
     results = load_results(config, results_dir, warmup_payload)
     report_path.write_text(build_report(config, results, prompt, warmup_payload, warmup_path))
