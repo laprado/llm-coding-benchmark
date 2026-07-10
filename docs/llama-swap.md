@@ -7,7 +7,7 @@ The Docker stack lives at [`~/Projects/llama-swap-docker`](../../llama-swap-dock
 1. Why a custom Docker build is needed for Blackwell
 2. How models are sourced (Ollama symlinks vs HuggingFace GGUFs)
 3. The VRAM budget and per-model context overrides
-4. The `--reasoning-format none` workaround for tool calling
+4. The `--reasoning-format deepseek` workaround for tool calling
 5. How to run the benchmark against the local stack
 6. Common pitfalls (env var leaks, broken symlinks, parser bugs)
 
@@ -145,14 +145,40 @@ A few models need their own macro:
 - **Phi 4** family: `--cache-type-k f16 --cache-type-v f16` (q8_0 KV cache causes `ggml_abort`). Use the `base_f16kv` macro.
 - **GLM 4.7 Flash**: `--flash-attn off` (uses deepseek2 arch internally which is FA-incompatible). Use the `base_no_fa` macro. Note: not in the current NVIDIA profile because the Q8 GGUF (~30 GB) leaves no KV cache headroom.
 
-### `--reasoning-format none` for harmony / channel models
+### `--reasoning-format` for harmony / channel models
 
-Models that emit reasoning content as separate "channels" need `--reasoning-format none` added to their command line:
+Models that emit reasoning as separate "channels" (`<|channel|>`, `<think>`) need the right
+`--reasoning-format` value or the channel tokens leak into `content` and break tool calling.
 
-- **gpt-oss:20b** — uses OpenAI's harmony format with `<|channel|>analysis|commentary|final` tags. Without `--reasoning-format none`, llama.cpp's autoparser tries to parse `<|channel|>` strings as tool calls and errors out with `Failed to parse input at pos N: <|channel|>...`. The flag tells llama-server to leave the channel content in the regular `content` field instead of trying to extract reasoning into a separate field, which lets opencode parse it normally.
-- **GLM 4.7 Flash** would need this too if it were in the local set, for the same reason (`<think>` tags).
+**⚠️ The value matters — `none` is NOT what you want for tool-calling.** Verified empirically
+against `llama-server --help` (build 9870) and a live tool-call probe on `clm-gemma-4-26B-A4B-it`
+(see [lprsoft-lab/llm-local#5](https://github.com/lprsoft-lab/llm-local/issues/5)):
 
-If you see error spam like `error: {'name': 'UnknownError', 'data': {'message': '"Failed to parse input at pos 755: <|channel|>write...'}}` in the benchmark heartbeats, that's the harmony parser bug — add `--reasoning-format none` to the model's command line in `config.yaml`.
+| value | effect |
+|---|---|
+| `none` | leaves thoughts **unparsed in `message.content`** → `<channel|>` stays in content (leaks) |
+| `deepseek` | moves thoughts to **`message.reasoning_content`** → content is clean ✅ |
+| `deepseek-legacy` | keeps `<think>` in content **and** populates `reasoning_content` |
+
+Probe result on Gemma 4 26B (GGUF):
+- `--reasoning-format none` → content leaks `<|channel>thought ... <channel|>`, `finish_reason=length`, **no** tool_calls (degenerates — this is exactly the stall seen in the `gemma4_26b_mlx` benchmark run).
+- `--reasoning-format deepseek` → clean content, reasoning preserved in `reasoning_content`, `finish_reason=tool_calls`, tool call succeeds. ✅
+
+**Recommendation for tool-calling / agentic runs: use `--reasoning-format deepseek`.** The Mac
+Studio `llm-local` config applies it globally via the shared `llama_common` macro
+(commit `01a4963`), so every `clm-` (llama.cpp) model inherits it:
+
+```yaml
+llama_common: "--port ${PORT} --host 127.0.0.1 --flash-attn on --jinja --reasoning-format deepseek"
+```
+
+Historical note: earlier runs (gpt-oss:20b, GLM 4.7 Flash, Qwen 3.5 on older llama.cpp builds)
+were documented as using `--reasoning-format none`. On those builds `none` avoided a hard
+autoparser crash (`Failed to parse input at pos N: <|channel|>...`) by leaving channel content in
+`content`. That stops the *crash* but does not strip the channel tokens — for reliable tool
+calling on channel-emitting models, `deepseek` is the correct value. **Caveat:** `mlx_lm.server`
+(the `mlm-` MLX path) has no `--reasoning-format` flag at all, so this fix only applies to the
+llama.cpp (`clm-`) backend; the MLX path leaks channel tokens unless the chat template is patched.
 
 ---
 
@@ -279,7 +305,7 @@ docker compose build --no-cache
 
 ### "Failed to parse input at pos N: <|channel|>..." or similar
 
-Tool call parser bug for harmony/channel-format models. Add `--reasoning-format none` to the offending model's command in `config.yaml` and restart llama-swap. This is documented above for `gpt-oss:20b`.
+Tool call parser bug for harmony/channel-format models. Add `--reasoning-format deepseek` to the offending model's command in `config.yaml` (moves channel/thought tokens out of `content` into `reasoning_content`) and restart llama-swap. See the `--reasoning-format` section above — note `none` only avoids the hard crash but still leaks channel tokens into `content`; `deepseek` is what actually keeps `content` clean for tool calling.
 
 ### "OOM" or "failed to allocate" partway through a benchmark
 
