@@ -32,7 +32,7 @@
       "id": "ollama/google/gemma4-26b-a4b-it-ollama",
       "label": "Gemma 4 26B Ollama MLX",
       "provider": "ollama",
-      "llama_swap_model": "olm-gemma4:26b-mlx",
+      "llama_swap_model": "olm-gemma4-26b-mlx",
       "ollama_model_name": "gemma4:26b-ollama-mlx",
       "ollama_display_name": "Gemma 4 26B Ollama MLX",
       "benchmark_context_override": 131072,
