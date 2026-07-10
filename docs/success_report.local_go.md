@@ -56,6 +56,16 @@ Coding-tuned **MoE (3B active)** is the profile the task needed: fast and low-me
 
 **5. The agent model and the app's runtime model compete for RAM.** When phase 2 first tested the chat, the app's fallback default (`gemma4:26b`, ~18 GB) loaded *on top of* the agent's model (~20 GB) → 40 GB → heavy swap. Fix: the chat fallback must use a **micro LLM** (`qwen2.5:0.5b`, ~0.4 GB) — it only needs to return a non-empty completion to prove the chat works. The prompt default was changed accordingly.
 
+**6. The serving backend, not the model, decides whether Gemma 4 survives — and the `--reasoning-format` fix is `deepseek`, not `none`.** Same **Gemma 4 26B A4B** model, three serving stacks, Go brief + headroom + no subtask, over llama-swap on the Mac Studio:
+
+| backend | serving | channel leak | outcome |
+|---|---|---|---|
+| `mlm-gemma-4-26B-A4B-it-OptiQ-4bit` | `mlx_lm.server` | leaks → degenerates | **failed** — stall at 11 files |
+| `olm-gemma4-26b-mlx` | `ollama serve` | phase1: 0 · **phase2: 2×** | completed (leaked but survived) |
+| `clm-gemma-4-26B-A4B-it` | `llama-server` + `--jinja --reasoning-format deepseek` | **0** | **completed, Tier 1** ✅ |
+
+Gemma 4 emits reasoning as harmony/channel tokens (`<channel|>`). If they land in `message.content` instead of a separate reasoning field, the tool-call loop degenerates (`finish_reason=length`, no tool_calls) — the exact stall the raw MLX-lm path hits at file 11. The fix is **`--reasoning-format deepseek`** on `llama-server` (moves thoughts to `reasoning_content`); verified empirically that **`none` LEAVES them in content** (leaks) — the opposite of the older docs (`llama-server` build 9870, [lprsoft-lab/llm-local#5](https://github.com/lprsoft-lab/llm-local/issues/5)). Only the llama.cpp (`clm-`) path exposes that flag. `mlx_lm.server` has no such lever → structurally unfixable. Ollama's native thinking parser catches most channel tokens (single-turn probe clean; phase 1's 80 tool-events clean) but **is not leak-proof**: in phase 2's *continued* session (full phase-1 history + followup), a final summarization turn leaked `thought\n<channel|>` twice into `content`. It survived only by timing (terminal turn, no file corrupted) — mid-session it could degenerate like MLX. **The only robust path for Gemma 4 agentic runs is llama.cpp GGUF + `--reasoning-format deepseek`;** the Ollama-Modelfile-TEMPLATE fix for `gemma4:26b-mlx` is tracked in [lprsoft-lab/llm-local#6](https://github.com/lprsoft-lab/llm-local/issues/6).
+
 ## opencode local runs (superseded steps)
 
 | Model | Status | Files | Fallback IP | Note |
@@ -87,13 +97,14 @@ For reference, the Rails brief locally: `qwen3.5:27b-mlx` 77 files Tier 2 (corre
 | `reasoning: true` | opencode + Ollama 0.30.8 + Qwen | fixes the zero-event stall |
 | `limit.context: 16384`, `limit.output: 16384` | ≤36 GB hardware | cap KV growth below swap; avoid mid-reasoning truncation |
 | BF16 over nvfp4/Q4 | Gemma | removes the `types_v2…v18` degeneration |
+| llama.cpp GGUF + `--jinja --reasoning-format deepseek` | Gemma 4 (agentic) | strips `<channel|>` from content → the only leak-free, Tier 1 path (MLX-lm has no flag; Ollama leaks in continued sessions) |
 
 ## Conclusions
 
 - **Local agentic coding works — with the right recipe.** A coding-tuned MoE in a harness that handles the model's output format, with a micro-LLM runtime fallback and context summarized between phases, produced a Go chat app that compiles, tests, dockerizes, runs, and answers offline. That is the deliverable the whole experiment was chasing.
 - **Pick the harness as carefully as the model.** Zed extracted a working app from the same model opencode could only scaffold.
 - **Newer infra is not automatically better.** Ollama 0.30.8 regressed every Qwen model in opencode via a reasoning/content split; 0.24.0 was better there.
-- **Quantization is a correctness variable** — nvfp4 made Gemma degenerate; BF16 fixed it.
+- **Quantization *and the serving backend* are correctness variables** — nvfp4 made Gemma degenerate (BF16 fixed it); and for the *same* Gemma 4 26B, MLX-lm failed / Ollama leaked-but-survived / llama.cpp+`--reasoning-format deepseek` was the only clean Tier 1 (finding #6). Reasoning-format handling lives in the server, and only llama.cpp exposes the lever.
 - **The monolithic one-shot brief measures the hardware's context-memory ceiling as much as coding ability.** Context summarization between phases (and, for full automation, decomposition into ~16k sub-tasks with fresh sessions) is the local-specific strategy the upstream cloud reports never needed.
 
 ## Reproducing the automatable path
