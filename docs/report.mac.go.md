@@ -1,13 +1,13 @@
 # Benchmark Report
 
-Generated at: 2026-07-10T18:33:15+00:00
+Generated at: 2026-07-10T19:34:47+00:00
 Prompt SHA256: `ce0bff42ccf9d4fbde43a283c978d96f20a2079ee6040e2b44fad163fa6d767b`
 
 ## Progress
 
-- `completed`: 1
+- `completed`: 2
 - `completed_with_errors`: 2
-- `failed`: 2
+- `failed`: 1
 - `timeout`: 0
 - `not_run`: 9
 
@@ -41,7 +41,7 @@ Prompt SHA256: `ce0bff42ccf9d4fbde43a283c978d96f20a2079ee6040e2b44fad163fa6d767b
 | Model | Provider | Warmup ctx | Status | Elapsed (s) | Total tokens | Tok/s | Works? | Files | Notes |
 | --- | --- | ---: | --- | ---: | ---: | ---: | --- | ---: | --- |
 | Gemma 4 26B MLX | ollama | - | failed | 591.37 | 24002 | 40.59 | partial | 11 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
-| Gemma 4 26B Ollama MLX | ollama | - | failed | 119.39 | 18403 | 154.14 | no | 5 | Exit code -15. Generated files do not resemble the requested Go project. |
+| Gemma 4 26B Ollama MLX | ollama | - | completed | 1273.73 | 75294 | 209.42 | yes | 17 | Go module, tests, README, and container files detected. |
 | Gemma 4 26B GGUF | ollama | - | completed | 2129.25 | 14885 | 17.44 | yes | 26 | Exit code -15. Go module, tests, README, and container files detected. |
 | Qwen 3.6 35B A3B GGUF | ollama | - | completed_with_errors | 1462.87 | 6474 | 10.84 | partial | 603 | Exit code -15. Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
 | Qwen 3.5 35B A3B Coding MLX | ollama | - | completed_with_errors | 1049.50 | 49223 | 55.20 | partial | 9 | Some expected benchmark artifacts exist, but the scaffold looks incomplete. |
