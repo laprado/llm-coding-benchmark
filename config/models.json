@@ -26,6 +26,34 @@
       "selection_reason": "Hosted locally via llama-swap. Requires llama.cpp b8665+ for the dedicated Gemma 4 tool call parser (PR #21418). Skipped by default; re-enable for llama-swap benchmark runs."
     },
     {
+      "slug": "gemma4_26b_gguf_macstudio",
+      "id": "ollama/clm-gemma-4-26B-A4B-it",
+      "label": "Gemma 4 26B A4B GGUF (llama.cpp, Mac Studio)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "enable_followup": true,
+      "benchmark_context_override": 32768,
+      "llama_swap_model": "clm-gemma-4-26B-A4B-it",
+      "ollama_model_name": "clm-gemma-4-26B-A4B-it",
+      "ollama_tool_call": true,
+      "tool_call": true,
+      "selection_reason": "Gemma 4 26B A4B served as GGUF via llama.cpp (llama-server) behind llama-swap on the Mac Studio (external id clm-gemma-4-26B-A4B-it, host 192.168.15.201:8080). This is the path that inherits --reasoning-format deepseek from the llm-local llama_common macro, so channel/harmony tokens land in reasoning_content and content stays clean for tool calling — unlike the MLX path (mlm-), which has no --reasoning-format flag and leaks. Self-contained via ollama_model_name so it resolves without a home opencode config entry; tool_call kept so the llama-swap override doesn't strip the capability. Run to confirm no tool-call channel-leak with the deepseek reasoning-format fix. skip_by_default; opt in with --model."
+    },
+    {
+      "slug": "gemma4_26b_mlx_macstudio",
+      "id": "ollama/mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+      "label": "Gemma 4 26B A4B MLX 4bit (mlx_lm, Mac Studio)",
+      "provider": "ollama",
+      "skip_by_default": true,
+      "enable_followup": true,
+      "benchmark_context_override": 32768,
+      "llama_swap_model": "mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+      "ollama_model_name": "mlm-gemma-4-26B-A4B-it-OptiQ-4bit",
+      "ollama_tool_call": true,
+      "tool_call": true,
+      "selection_reason": "Gemma 4 26B A4B served as MLX 4bit via mlx_lm.server behind llama-swap on the Mac Studio (external id mlm-gemma-4-26B-A4B-it-OptiQ-4bit, host 192.168.15.201:8080). Counterpart to gemma4_26b_gguf_macstudio (llama.cpp path). Historically the MLX path leaked channel/harmony tokens into content (no --reasoning-format flag), causing the original gemma4_26b_mlx stall. A direct tool-call probe on mlx_lm 0.31.3 shows thinking now lands in reasoning_content with clean content and finish_reason=tool_calls — this run confirms the same holds across a sustained agentic loop (ndjson leak-marker check). Self-contained via ollama_model_name; tool_call kept so the llama-swap override doesn't strip the capability. skip_by_default; opt in with --model."
+    },
+    {
       "slug": "glm_4_7_flash_bf16",
       "id": "ollama/glm/glm-4.7-flash-bf16",
       "label": "GLM 4.7 Flash BF16",
