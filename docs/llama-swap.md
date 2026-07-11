@@ -194,9 +194,18 @@ Historical note: earlier runs (gpt-oss:20b, GLM 4.7 Flash, Qwen 3.5 on older lla
 were documented as using `--reasoning-format none`. On those builds `none` avoided a hard
 autoparser crash (`Failed to parse input at pos N: <|channel|>...`) by leaving channel content in
 `content`. That stops the *crash* but does not strip the channel tokens — for reliable tool
-calling on channel-emitting models, `deepseek` is the correct value. **Caveat:** `mlx_lm.server`
-(the `mlm-` MLX path) has no `--reasoning-format` flag at all, so this fix only applies to the
-llama.cpp (`clm-`) backend; the MLX path leaks channel tokens unless the chat template is patched.
+calling on channel-emitting models, `deepseek` is the correct value.
+
+**Caveat (updated — MLX resolved as of `mlx_lm` 0.31.3):** `mlx_lm.server` (the `mlm-` MLX path)
+has no `--reasoning-format` flag, so historically the MLX path leaked channel tokens into `content`
+(this caused the original `gemma4_26b_mlx` stall) while only the llama.cpp (`clm-`) backend could
+take the `deepseek` fix. **This is no longer true as of `mlx_lm` 0.31.3**, which separates the
+thinking into `reasoning_content` natively via the chat template — verified on
+`mlm-gemma-4-26B-A4B-it-OptiQ-4bit`: a direct tool-call probe returns `finish_reason=tool_calls`
+with `reasoning_content` populated and clean empty `content`, and a sustained 67-step agentic
+benchmark loop produced **zero** channel-leak markers. So both backends (`clm-` via
+`--reasoning-format deepseek`, and `mlm-` via mlx_lm ≥ 0.31.3) now keep `content` clean for tool
+calling. Older `mlx_lm` versions still leak.
 
 ---
 

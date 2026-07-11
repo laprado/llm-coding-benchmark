@@ -30,7 +30,7 @@ different backends and be compared side by side (tool-calling behavior varies):
 
 | Prefix | Backend | Tool | `--reasoning-format` support |
 |---|---|---|---|
-| `mlm-` | MLX | `mlx_lm.server` | ✗ (no flag — see finding below) |
+| `mlm-` | MLX | `mlx_lm.server` | no flag, but **not needed as of `mlx_lm` 0.31.3** — reasoning separated natively (see finding below) |
 | `clm-` | llama.cpp | `llama-server` | ✓ (`deepseek`, via `llama_common` macro) |
 | `olm-` | ollama | `ollama serve` | n/a (server-side chat template) |
 
@@ -50,20 +50,25 @@ different backends and be compared side by side (tool-calling behavior varies):
 Three backends serve the **same** Gemma 4 26B A4B (`mlm-`, `olm-`, `clm-`), which is
 the whole point: it lets me compare MLX × Ollama × llama.cpp on identical weights.
 
-## Finding: `--reasoning-format` is a `clm-`-only fix (MLX leaks channel tokens)
+## Finding: both `clm-` and `mlm-` keep `content` clean (MLX resolved in `mlx_lm` 0.31.3)
 
 Channel/harmony models (Gemma 4, Qwen 3.5/3.6) emit reasoning as separate channels
 (`<|channel|>`, `<think>`). If those tokens leak into `message.content`, the client's
-tool-calling loop stalls (channel-leak → stall). The fix is server-side:
+tool-calling loop stalls (channel-leak → stall). Current state per backend:
 
 - **`clm-` (llama.cpp)** — inherit `--reasoning-format deepseek` globally via the
   shared `llama_common` macro in `config.yaml`, which moves thoughts to
   `message.reasoning_content` and keeps `content` clean → `finish_reason=tool_calls`.
   ✅ This is applied to every `clm-` model.
-- **`mlm-` (MLX)** — `mlx_lm.server` has **no `--reasoning-format` flag at all**, so
-  the leak is **not** fixable by a launch flag here. A fix would require overriding the
-  chat template. For reliable tool-calling with Gemma 4, prefer the GGUF path
-  (`clm-gemma-4-26B-A4B-it`) over `mlm-gemma-4-26B-A4B-it-OptiQ-4bit`.
+- **`mlm-` (MLX)** — `mlx_lm.server` has no `--reasoning-format` flag, so *historically*
+  this path leaked channel tokens into `content` (this caused the original `gemma4_26b_mlx`
+  stall). **Resolved as of `mlx_lm` 0.31.3**, which separates thinking into
+  `reasoning_content` natively via the chat template. ✅ Verified on
+  `mlm-gemma-4-26B-A4B-it-OptiQ-4bit` (2026-07-11): a direct tool-call probe returns
+  `finish_reason=tool_calls` with `reasoning_content` populated and clean empty `content`,
+  and a sustained 67-step agentic benchmark loop produced **zero** channel-leak markers.
+  Older `mlx_lm` versions still leak — so the GGUF path (`clm-gemma-4-26B-A4B-it`) remains
+  the safe fallback only if the MLX server is below 0.31.3.
 - **`olm-` (ollama)** — reasoning handling is the ollama chat template's job; not a
   `--reasoning-format` matter.
 
@@ -73,7 +78,8 @@ unparsed in `content`); `deepseek` is the correct value. Verified against
 [lprsoft-lab/llm-local#5](https://github.com/lprsoft-lab/llm-local/issues/5) and the
 `--reasoning-format` section of [`docs/llama-swap.md`](llama-swap.md).
 
-This is why the benchmark's `gemma4_26b_mlx` run stalled while the GGUF path completes.
+This is why the *original* `gemma4_26b_mlx` run stalled (on a pre-0.31.3 `mlx_lm`). On
+`mlx_lm` 0.31.3 the MLX path no longer leaks — see the finding above.
 
 ## Harness relationship
 
@@ -99,5 +105,6 @@ MAC=192.168.15.201 PORT=8080 bash scripts/test-tool-calling.sh \
   mlm-gemma-4-26B-A4B-it-OptiQ-4bit clm-gemma-4-26B-A4B-it
 ```
 
-Expected: `clm-` returns a structured `tool_call`; `mlm-` degenerates to text / channel
-leak on Gemma 4.
+Expected (as of `mlx_lm` 0.31.3): **both** `clm-` and `mlm-` return a structured `tool_call`
+with clean `content` (thinking in `reasoning_content`). On `mlx_lm` **below** 0.31.3, `mlm-`
+instead degenerates to text / channel leak on Gemma 4 while `clm-` stays clean.
